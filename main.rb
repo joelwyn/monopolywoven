@@ -72,12 +72,44 @@ def load_players()
 
 end
 
+def load_dice
+    file = File.read "rolls_1.json"
+    data = JSON.parse(file)
+    return data
+
+end
+
+def dice_queue(dice)
+    queue = Queue.new
+    for i in 0...dice.length
+        queue << dice[i]
+    end
+    return queue
+
+end
+
+def moving(players,queue)
+    while queue.length != 0
+        
+        for i in 0...players.length
+            if queue.length != 0
+                players[i].position += queue.pop
+                puts players[i].position
+            end
+        end
+    end
+
+end
+
 def start()
     data = load_map()
     map = map(data)
     players = load_players()
     puts map[1].owner
     puts players[0].position
+    dice = load_dice()
+    queue = dice_queue(dice)
+    moving(players,queue)
 end
 
 start()
