@@ -11,13 +11,14 @@ class Players
 end
 
 class Map
-    attr_accessor :name, :price, :color, :type, :owner
-    def initialize (name, price, color, type, owner)
+    attr_accessor :name, :price, :color, :type, :owner, :loc
+    def initialize (name, price, color, type, owner, loc)
         @name = name
         @price = price
         @color = color
         @type = type
         @owner = owner
+        @loc =loc
     end
 
 end
@@ -25,12 +26,6 @@ end
 def load_map()
     file = File.read "board.json"
     data = JSON.parse(file)
-    # map = Map.new()
-    # for i in 0...data.length
-       
-    #     puts data[i]["name"]
-
-    # end
     return data
 end
 
@@ -40,7 +35,8 @@ def read_map(data,i)
     map_color = data[i]["colour"]
     map_type = data[i]["type"]
     map_owner =nil
-    map = Map.new(map_name,map_price,map_color,map_type,map_owner)
+    map_loc = i
+    map = Map.new(map_name,map_price,map_color,map_type,map_owner,map_loc)
 
     return map
 end
@@ -88,13 +84,29 @@ def dice_queue(dice)
 
 end
 
-def moving(players,queue)
+def check_property(players,map)
+    position = players.position
+    if map[position].owner == nil
+        players.bank -= map[position].price
+        map[position].owner = players.name
+    end
+    puts "map name : " + map[position].name.to_s + " Map owner : " +  map[position].owner.to_s
+end
+
+
+def moving(players,queue,map)
     while queue.length != 0
         
         for i in 0...players.length
             if queue.length != 0
+                
                 players[i].position += queue.pop
-                puts players[i].position
+                if players[i].position > 8
+                    players[i].position -= 8
+                    players[i].bank += 1
+                end
+                check_property(players[i],map)
+                puts "Name : " + players[i].name.to_s + "Position : " + players[i].position.to_s + " Bank : " + players[i].bank.to_s
             end
         end
     end
@@ -109,7 +121,8 @@ def start()
     puts players[0].position
     dice = load_dice()
     queue = dice_queue(dice)
-    moving(players,queue)
+    moving(players,queue,map)
+    puts map[5].loc
 end
 
 start()
