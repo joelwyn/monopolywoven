@@ -68,9 +68,29 @@ def load_players()
 
 end
 
+def read_integer_in_range()
+    value = gets.chomp
+    i_value = value.to_i
+    while(i_value < 1 or i_value >2)
+        puts " Please select option 1 for dice set 1 and select option 2 for dice set 2 "
+        value = gets.chomp
+        i_value = value.to_i
+    end
+    return i_value
+
+end
+
 def load_dice
-    file = File.read "rolls_1.json"
-    data = JSON.parse(file)
+    puts("Please select option 1 for dice set 1 and select option 2 for dice set 2")
+    selection = read_integer_in_range()
+    case selection 
+        when 1
+            file = File.read "rolls_1.json"
+            data = JSON.parse(file)
+        when 2
+            file = File.read "rolls_2.json"
+            data = JSON.parse(file)
+        end
     return data
 
 end
@@ -119,15 +139,27 @@ def check_property(players,map,i)
         end
 
     end
-    #puts "map name : " + map[position].name.to_s + " Map owner : " +  map[position].owner.to_s + " map color : " + map[position].color.to_s
+    # puts "map name : " + map[position].name.to_s + " Map owner : " +  map[position].owner.to_s + " map color : " + map[position].color.to_s
 end
 
+def check_bank_status(players,i)
+    insolvent = false
+    if players[i].bank < 0
+            puts players[i].bank
+            insolvent = true
+            puts insolvent
+    end
+    return insolvent
+end
 
 def moving(players,queue,map)
-    while queue.length != 0
+    bank_status = false
+    
+    while queue.length != 0 && bank_status == false
         
         for i in 0...players.length
-            if queue.length != 0
+            bank_status = check_bank_status(players,i)
+            if queue.length != 0 && bank_status == false
                 
                 players[i].position += queue.pop
                 if players[i].position > 8
@@ -135,7 +167,8 @@ def moving(players,queue,map)
                     players[i].bank += 1
                 end
                 check_property(players,map,i)
-                puts "Name : " + players[i].name.to_s + "Position : " + players[i].position.to_s + " Bank : " + players[i].bank.to_s
+               puts "Name : " + players[i].name.to_s + "Position : " + players[i].position.to_s + " Bank : " + players[i].bank.to_s
+                
             end
         end
     end
@@ -153,6 +186,10 @@ def start()
     moving(players,queue,map)
     puts map[5].loc
     puts map[0].owner
+    #puts "Name : " + players[0].name.to_s + "Position : " + players[0].position.to_s + " Bank : " + players[0].bank.to_s
+    puts "* Who would win each game?"
+    puts "* How much money does everybody end up with?"
+    puts "* What spaces does everybody finish on?"
 end
 
 start()
