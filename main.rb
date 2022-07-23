@@ -162,7 +162,6 @@ end
 def check_bank_status(players,i)
     insolvent = false
     if players[i].bank < 0
-            puts players[i].bank
             insolvent = true
     end
     return insolvent
