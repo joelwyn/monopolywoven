@@ -1,4 +1,6 @@
 require "json"
+
+# player class that holding different attributes
 class Players
     attr_accessor :name, :position, :bank, :property
     def initialize (name, position, bank, property)
@@ -10,6 +12,7 @@ class Players
 
 end
 
+# map class that holding different property info
 class Map
     attr_accessor :name, :price, :color, :type, :owner, :loc
     def initialize (name, price, color, type, owner, loc)
@@ -23,12 +26,14 @@ class Map
 
 end
 
+# loading board from json file
 def load_map()
     file = File.read "board.json"
     data = JSON.parse(file)
     return data
 end
 
+# storing each attributes into a map object
 def read_map(data,i)
     map_name = data[i]["name"]
     map_price = data[i]["price"]
@@ -41,6 +46,7 @@ def read_map(data,i)
     return map
 end
 
+# storing each position in the map into an array
 def map(data)
     map = Array.new()
     for i in 0...data.length
@@ -50,6 +56,7 @@ def map(data)
 
 end
 
+# adding new players as an object with players class with default settings then store the players into an array
 def load_players()
     starting_position = 0
     starting_bank = 16
@@ -68,6 +75,7 @@ def load_players()
 
 end
 
+# checking integer with min and max value for selection of the dice set
 def read_integer_in_range()
     value = gets.chomp
     i_value = value.to_i
@@ -80,6 +88,7 @@ def read_integer_in_range()
 
 end
 
+# selectionn to use which dice set
 def load_dice
     puts("Please select option 1 for dice set 1 and select option 2 for dice set 2")
     selection = read_integer_in_range()
@@ -95,6 +104,7 @@ def load_dice
 
 end
 
+# using queue to input all the integer of move from dice json file
 def dice_queue(dice)
     queue = Queue.new
     for i in 0...dice.length
@@ -104,13 +114,13 @@ def dice_queue(dice)
 
 end
 
+# checking property color to determine whether if the same color belongs to the same owner
 def check_property_color(players,map,j,m_position)
     same_color_owner = false
     for i in 0...map.length
         if map[i].color == map[m_position].color && map[i].loc != map[m_position].loc && map[i].owner !=nil 
             if map[i].owner ==players[j].name 
                 same_color_owner = true
-           # puts "xxxx : " + i.to_s + map[i].owner.to_s
             end
         end
     end
@@ -118,6 +128,7 @@ def check_property_color(players,map,j,m_position)
 
 end
 
+# checking if property is owned or vacant, if vacant player will purchase it, and if it is owned, player will pay rent
 def check_property(players,map,i)
     position = players[i].position
     if map[position].owner == nil
@@ -126,49 +137,50 @@ def check_property(players,map,i)
     else
         for j in 0...players.length
             if map[position].owner == players[j].name
-                #map_color = map[position].color
                 same_color_owner = check_property_color(players,map,j,position)
                 if same_color_owner == true
                     players[i].bank = players[i].bank - map[position].price * 2
-                    players[j].bank = players[j].bank + map[position].price * 2
+                    if players[i].bank >= 0
+                        players[j].bank = players[j].bank + map[position].price * 2
+                    else
+                        players[j].bank = players[j].bank + map[position].price * 2 + players[i].bank
+                    end
                 else
                     players[i].bank -= map[position].price
-                    players[j].bank += map[position].price
+                    if players[i].bank >= 0
+                        players[j].bank += map[position].price
+                    else
+                        players[j].bank = players[j].bank + map[position].price + players[i].bank
+                    end
                 end
             end
         end
-
     end
-    # puts "map name : " + map[position].name.to_s + " Map owner : " +  map[position].owner.to_s + " map color : " + map[position].color.to_s
 end
 
+# check bank status of each player to make sure everyone is not below 0
 def check_bank_status(players,i)
     insolvent = false
     if players[i].bank < 0
             puts players[i].bank
             insolvent = true
-            puts insolvent
     end
     return insolvent
 end
 
+# popping the queue to start moving each players
 def moving(players,queue,map)
     bank_status = false
-    
-    while queue.length != 0 && bank_status == false
-        
-        for i in 0...players.length
-            bank_status = check_bank_status(players,i)
+    while queue.length != 0 && bank_status == false       
+        for i in 0...players.length  
             if queue.length != 0 && bank_status == false
-                
                 players[i].position += queue.pop
                 if players[i].position > 8
                     players[i].position -= 8
                     players[i].bank += 1
                 end
                 check_property(players,map,i)
-               puts "Name : " + players[i].name.to_s + "Position : " + players[i].position.to_s + " Bank : " + players[i].bank.to_s
-                
+                bank_status = check_bank_status(players,i)
             end
         end
     end
@@ -179,17 +191,24 @@ def start()
     data = load_map()
     map = map(data)
     players = load_players()
-    puts map[1].owner
-    puts players[0].position
     dice = load_dice()
     queue = dice_queue(dice)
     moving(players,queue,map)
-    puts map[5].loc
-    puts map[0].owner
-    #puts "Name : " + players[0].name.to_s + "Position : " + players[0].position.to_s + " Bank : " + players[0].bank.to_s
+    puts"--------------------------------------------------"
     puts "* Who would win each game?"
+    winner = players.max_by {|name,bank| bank}
+    puts winner.name.to_s 
+    puts"--------------------------------------------------"
     puts "* How much money does everybody end up with?"
+    for i in 0...players.length
+       puts "Players name: " + players[i].name.to_s + ", accounts $ : " + players[i].bank.to_s
+    end
+    puts"--------------------------------------------------"
     puts "* What spaces does everybody finish on?"
+    for i in 0...players.length
+        puts "Players name: " + players[i].name.to_s + ", position : " + players[i].position.to_s
+     end
+     puts"--------------------------------------------------"
 end
 
 start()
