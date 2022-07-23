@@ -84,13 +84,42 @@ def dice_queue(dice)
 
 end
 
-def check_property(players,map)
-    position = players.position
-    if map[position].owner == nil
-        players.bank -= map[position].price
-        map[position].owner = players.name
+def check_property_color(players,map,j,m_position)
+    same_color_owner = false
+    for i in 0...map.length
+        if map[i].color == map[m_position].color && map[i].loc != map[m_position].loc && map[i].owner !=nil 
+            if map[i].owner ==players[j].name 
+                same_color_owner = true
+           # puts "xxxx : " + i.to_s + map[i].owner.to_s
+            end
+        end
     end
-    puts "map name : " + map[position].name.to_s + " Map owner : " +  map[position].owner.to_s
+    return same_color_owner
+
+end
+
+def check_property(players,map,i)
+    position = players[i].position
+    if map[position].owner == nil
+        players[i].bank -= map[position].price
+        map[position].owner = players[i].name
+    else
+        for j in 0...players.length
+            if map[position].owner == players[j].name
+                #map_color = map[position].color
+                same_color_owner = check_property_color(players,map,j,position)
+                if same_color_owner == true
+                    players[i].bank = players[i].bank - map[position].price * 2
+                    players[j].bank = players[j].bank + map[position].price * 2
+                else
+                    players[i].bank -= map[position].price
+                    players[j].bank += map[position].price
+                end
+            end
+        end
+
+    end
+    #puts "map name : " + map[position].name.to_s + " Map owner : " +  map[position].owner.to_s + " map color : " + map[position].color.to_s
 end
 
 
@@ -105,7 +134,7 @@ def moving(players,queue,map)
                     players[i].position -= 8
                     players[i].bank += 1
                 end
-                check_property(players[i],map)
+                check_property(players,map,i)
                 puts "Name : " + players[i].name.to_s + "Position : " + players[i].position.to_s + " Bank : " + players[i].bank.to_s
             end
         end
@@ -123,6 +152,7 @@ def start()
     queue = dice_queue(dice)
     moving(players,queue,map)
     puts map[5].loc
+    puts map[0].owner
 end
 
 start()
